@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD con cálculo</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    table, th, td {
+      border: 1px solid black;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    #tabla-mayores {
+      margin-top: 20px;
+    }
+
+    #contenedor-imagenes {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .caja {
+      border: 2px solid #333;
+      margin: 10px;
+      padding: 10px;
+      text-align: center;
+      display: inline-block;
+      transition: border-color 0.3s ease-in-out;
+    }
+
+    .caja.destacada {
+      border-color: red;
+    }
+  </style>
+</head>
+<body>
+  <h2>Calcular cubicuadre para enviar a  API de paquetería</h2>
+
+  <form id="formulario">
+    <label for="descripcion">Descripción:</label>
+    <input type="text" id="descripcion" required>
+    
+    <label for="largo">Largo:</label>
+    <input type="number" id="largo" required>
+    
+    <label for="ancho">Ancho:</label>
+    <input type="number" id="ancho" required>
+    
+    <label for="alto">Alto:</label>
+    <input type="number" id="alto" required>
+    
+    <label for="peso">Peso:</label>
+    <input type="number" id="peso" required>
+
+    <button type="button" onclick="agregarRegistro()">Agregar</button>
+  </form>
+
+  <table id="tabla">
+    <thead>
+      <tr>
+        <th>Descripción</th>
+        <th>Largo</th>
+        <th>Ancho</th>
+        <th>Alto</th>
+        <th>Volumen (cm³)</th>
+        <th>Peso</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+    </tbody>
+    <tfoot>
+      <tr id="totales">
+        <td>Total</td>
+        <td id="total-largo"></td>
+        <td id="total-ancho"></td>
+        <td id="total-alto"></td>
+        <td id="total-volumen"></td>
+        <td id="total-peso"></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <table id="tabla-mayores">
+    <thead>
+      <tr>
+        <th>Mayor Largo</th>
+        <th>Mayor Ancho</th>
+        <th>Mayor Alto</th>
+      </tr>
+    </thead>
+    <tbody id="tbody-mayores">
+    </tbody>
+  </table>
+
+  <div id="contenedor-imagenes">
+    <div class="caja" id="caja1">
+      <p>Caja 1</p>
+      <p>20x25x10 cm</p>
+    </div>
+
+    <div class="caja" id="caja2">
+      <p>Caja 2</p>
+      <p>40x50x20 cm</p>
+    </div>
+
+    <div class="caja" id="caja3">
+      <p>Caja 3</p>
+      <p>100x100x100 cm</p>
+    </div>
+  </div>
+
+  <script>
+    let registros = [];
+
+    function agregarRegistro() {
+      // Obtener valores del formulario
+      const descripcion = document.getElementById('descripcion').value;
+      const largo = parseFloat(document.getElementById('largo').value);
+      const ancho = parseFloat(document.getElementById('ancho').value);
+      const alto = parseFloat(document.getElementById('alto').value);
+      const peso = parseFloat(document.getElementById('peso').value);
+
+      // Calcular el volumen en cm³
+      const volumen = largo * ancho * alto;
+
+      // Agregar el registro al array
+      const nuevoRegistro = { descripcion, largo, ancho, alto, volumen, peso };
+      registros.push(nuevoRegistro);
+
+      // Actualizar la tabla
+      actualizarTabla();
+
+      // Actualizar la tabla de mayores
+      actualizarTablaMayores();
+
+      // Mostrar caja representativa
+      mostrarCajaRepresentativa();
+
+      // Limpiar el formulario
+      document.getElementById('formulario').reset();
+    }
+
+    function actualizarTabla() {
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = '';
+
+      // Inicializar totales
+      let totalLargo = 0;
+      let totalAncho = 0;
+      let totalAlto = 0;
+      let totalVolumen = 0;
+      let totalPeso = 0;
+
+      registros.forEach(registro => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${registro.descripcion}</td>
+          <td>${registro.largo}</td>
+          <td>${registro.ancho}</td>
+          <td>${registro.alto}</td>
+          <td>${registro.volumen}</td>
+          <td>${registro.peso}</td>
+        `;
+        tbody.appendChild(row);
+
+        // Sumar al total
+        totalLargo += registro.largo;
+        totalAncho += registro.ancho;
+        totalAlto += registro.alto;
+        totalVolumen += registro.volumen;
+        totalPeso += registro.peso;
+      });
+
+      // Actualizar totales en la fila de totales
+      document.getElementById('total-largo').textContent = totalLargo;
+      document.getElementById('total-ancho').textContent = totalAncho;
+      document.getElementById('total-alto').textContent = totalAlto;
+      document.getElementById('total-volumen').textContent = totalVolumen;
+      document.getElementById('total-peso').textContent = totalPeso;
+    }
+
+    function actualizarTablaMayores() {
+      const tbodyMayores = document.getElementById('tbody-mayores');
+      tbodyMayores.innerHTML = '';
+
+      // Identificar el mayor en Largo, Ancho y Alto
+      let mayorLargo = 0;
+      let mayorAncho = 0;
+      let mayorAlto = 0;
+
+      registros.forEach(registro => {
+        mayorLargo = Math.max(mayorLargo, registro.largo);
+        mayorAncho = Math.max(mayorAncho, registro.ancho);
+        mayorAlto = Math.max(mayorAlto, registro.alto);
+      });
+
+      const rowMayores = document.createElement('tr');
+      rowMayores.innerHTML = `
+        <td>${mayorLargo}</td>
+        <td>${mayorAncho}</td>
+        <td>${mayorAlto}</td>
+      `;
+      tbodyMayores.appendChild(rowMayores);
+    }
+
+    function mostrarCajaRepresentativa() {
+      const caja1 = document.getElementById('caja1');
+      const caja2 = document.getElementById('caja2');
+      const caja3 = document.getElementById('caja3');
+
+      // Obtener valores de la tabla de mayores
+      const mayorLargo = parseFloat(document.getElementById('tbody-mayores').rows[0].cells[0].textContent);
+      const mayorAncho = parseFloat(document.getElementById('tbody-mayores').rows[0].cells[1].textContent);
+      const mayorAlto = parseFloat(document.getElementById('tbody-mayores').rows[0].cells[2].textContent);
+
+      // Convertir medidas de cajas a cm³
+      const volumenCaja1 = 20 * 25 * 10;
+      const volumenCaja2 = 40 * 50 * 20;
+      const volumenCaja3 = 100 * 100 * 100;
+
+      // Obtener totales
+      const totalLargo = parseFloat(document.getElementById('total-largo').textContent);
+      const totalAncho = parseFloat(document.getElementById('total-ancho').textContent);
+      const totalAlto = parseFloat(document.getElementById('total-alto').textContent);
+      const totalVolumen = parseFloat(document.getElementById('total-volumen').textContent);
+
+      // Realizar dos niveles de comparación
+      // Comparación por volúmen
+      if (
+        totalVolumen <= volumenCaja1
+      ) {
+        resaltarCaja(caja1);
+        ocultarCajas([caja2, caja3]);
+      } else if (
+        totalVolumen <= volumenCaja2
+      ) {
+        resaltarCaja(caja2);
+        ocultarCajas([caja1, caja3]);
+      } else if (
+        totalVolumen <= volumenCaja3
+      ) {
+        resaltarCaja(caja3);
+        ocultarCajas([caja1, caja2]);
+      } else {
+        // Si no se cumplen las condiciones anteriores, quitar el resaltado de todas las cajas
+        ocultarCajas([caja1, caja2, caja3]);
+      }
+      /*
+      // Comparación por dimensiónes
+      if (
+        totalLargo <= mayorLargo && 
+        totalAncho <= mayorAncho && 
+        totalAlto <= mayorAlto &&
+        totalVolumen <= volumenCaja1
+      ) {
+        resaltarCaja(caja1);
+        ocultarCajas([caja2, caja3]);
+      } else if (
+        totalLargo <= mayorLargo && 
+        totalAncho <= mayorAncho && 
+        totalAlto <= mayorAlto &&
+        totalVolumen <= volumenCaja2
+      ) {
+        resaltarCaja(caja2);
+        ocultarCajas([caja1, caja3]);
+      } else if (
+        totalLargo <= mayorLargo && 
+        totalAncho <= mayorAncho && 
+        totalAlto <= mayorAlto &&
+        totalVolumen <= volumenCaja3
+      ) {
+        resaltarCaja(caja3);
+        ocultarCajas([caja1, caja2]);
+      } else {
+        // Si no se cumplen las condiciones anteriores, quitar el resaltado de todas las cajas
+        ocultarCajas([caja1, caja2, caja3]);
+      }
+      */
+    }
+
+    function resaltarCaja(caja) {
+      caja.classList.add('destacada');
+    }
+
+    function ocultarCajas(cjas) {
+      cjas.forEach(caja => {
+        caja.classList.remove('destacada');
+      });
+    }
+  </script>
+</body>
+</html>
